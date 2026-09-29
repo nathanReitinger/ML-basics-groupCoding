@@ -2,7 +2,21 @@
 
 A Flask app for classrooms. Students open a URL, name their group, and get a
 Python editor with a Run button and a terminal underneath. You get a roster of
-every group and can open any one of them and run their code on the projector.
+every group and can open any one of them and run their code on the projector. 
+
+Supports multi-editing code!
+
+
+
+![1](media/1.png)
+
+![2](media/2.png)
+
+![3](media/3.png)
+
+![4](media/4.png)
+
+
 
 ## Run it
 

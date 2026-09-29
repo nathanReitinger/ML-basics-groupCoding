@@ -32,7 +32,7 @@ stores text. That also means no GPU and no TensorFlow - see the README.
 #   Get it from https://dashboard.ngrok.com/get-started/your-authtoken
 #   It looks like:  2abcDEFghiJKLmnoPQRstuVWXyz_1A2b3C4d5E6f7G8h9
 #
-NGROK_AUTHTOKEN = "3JgSnN218rYoMuGycp08kRWgQFT_3ZYzh6XePfWVVrCmGmFnx"
+NGROK_AUTHTOKEN = ""
 #
 # ==========================================================================
 
