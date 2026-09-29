@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ task['title'] if task and task['title'] else 'New task' }} — Python Lab{% endblock %}
+{% block body_class %}entry{% endblock %}
+
+{% block content %}
+<main class="task-page">
+  <h1>{{ 'Edit task' if task and task['id'] else 'Write a task' }}</h1>
+  <p class="crumbs">
+    <a href="{{ url_for('instructor_roster') }}">Groups</a>
+    <a href="{{ url_for('tasks_index') }}">Tasks</a>
+  </p>
+
+  {% if request.args.get('assigned') %}
+    <p class="notice">
+      Handed out to {{ group_count }} group{{ '' if group_count == 1 else 's' }}.
+      {% if request.args.get('filled')|int %}
+        {{ request.args.get('filled') }} answers reset to the starter.
+      {% endif %}
+      Students see it on their next reload.
+    </p>
+  {% endif %}
+
+  {% if error %}<p class="tag-error" style="margin-bottom:18px">{{ error }}</p>{% endif %}
+
+  <form method="post"
+        action="{{ url_for('task_save', tid=task['id']) if task and task['id'] else url_for('task_create') }}">
+
+    <label class="field">
+      <span class="field-label">Title</span>
+      <span class="field-hint">What students see at the top of their screen.</span>
+      <input type="text" name="title" maxlength="120" required
+             value="{{ task['title'] if task else '' }}"
+             placeholder="Fahrenheit to Celsius">
+    </label>
+
+    <label class="field">
+      <span class="field-label">Instructions</span>
+      <span class="field-hint">
+        Plain text, line breaks kept. This sits above their editor, collapsible,
+        so it can be as long as it needs to be.
+      </span>
+      <textarea name="instructions" rows="8"
+                placeholder="Finish the convert() function so it turns Fahrenheit into Celsius.&#10;&#10;Check your work: 212 should give 100.0, and -40 should give -40.0.">{{ task['instructions'] if task else '' }}</textarea>
+    </label>
+
+    <label class="field">
+      <span class="field-label">Starter code</span>
+      <span class="field-hint">
+        What lands in their editor. Leave the interesting part unfinished and
+        keep the scaffolding, so they start on the actual problem.
+      </span>
+      <textarea name="starter_code" rows="16" class="code" spellcheck="false"
+                placeholder="def convert(fahrenheit):&#10;    # your code here&#10;    pass&#10;&#10;print(convert(212))">{{ task['starter_code'] if task else '' }}</textarea>
+    </label>
+
+    <div class="form-actions">
+      <button class="btn btn-run" type="submit">Save task</button>
+      <a class="btn btn-quiet" href="{{ url_for('tasks_index') }}" style="text-decoration:none">Back to tasks</a>
+      <button class="btn btn-quiet" type="button" id="example">Fill in an example</button>
+    </div>
+  </form>
+
+  {% if task and task['id'] %}
+    <section class="assign">
+      <h2>Hand it to the class</h2>
+      <p>
+        Switches every group's tab to this assignment. Their work on the other
+        assignments is untouched either way; the second option throws away what
+        they have written on <em>this</em> one, so pick it before they start.
+      </p>
+      <form method="post" action="{{ url_for('task_assign', tid=task['id']) }}" class="form-actions">
+        <label class="visually-hidden" for="mode">What to do with their code</label>
+        <select name="mode" id="mode">
+          <option value="move" selected>Open this assignment for everyone, keep their work</option>
+          <option value="reset">Open it and wipe their answers back to the starter</option>
+        </select>
+        <button class="btn btn-run" type="submit">
+          Hand out to {{ group_count }} group{{ '' if group_count == 1 else 's' }}
+        </button>
+      </form>
+      {% if assigned %}
+        <p style="margin:14px 0 0; color: var(--muted); font-size:.9rem">
+          {{ assigned }} group{{ '' if assigned == 1 else 's' }} currently on this task.
+        </p>
+      {% endif %}
+    </section>
+
+    <div class="form-actions" style="margin-top:22px">
+      <form method="post" action="{{ url_for('task_delete', tid=task['id']) }}"
+            onsubmit="return confirm('Delete this task? Groups keep their code, they just lose the instructions.')">
+        <button class="btn danger" type="submit">Delete task</button>
+      </form>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById("example").addEventListener("click", function () {
+    var form = document.forms[0];
+    if (form.title.value || form.instructions.value || form.starter_code.value) {
+      if (!confirm("Overwrite what's in the form with an example?")) return;
+    }
+    form.title.value = "Fahrenheit to Celsius";
+    form.instructions.value =
+      "Finish the convert() function so it turns Fahrenheit into Celsius.\n\n" +
+      "The formula is (F - 32) * 5 / 9.\n\n" +
+      "Check your work: 212 should print 100.0, and -40 should print -40.0.\n" +
+      "When those both work, add a loop that converts every value in readings.";
+    form.starter_code.value =
+      "readings = [212, 98.6, 32, -40]\n\n\n" +
+      "def convert(fahrenheit):\n" +
+      "    # your code here\n" +
+      "    pass\n\n\n" +
+      "print(convert(212))\n" +
+      "print(convert(-40))\n";
+    form.title.focus();
+  });
+</script>
+{% endblock %}

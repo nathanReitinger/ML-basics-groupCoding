@@ -1,0 +1,14 @@
+0. Hello
+A first run, so you know the buttons work.
+
+Press the green Run button. You should see hello world appear in the black output panel underneath the editor.
+
+The first run takes a few seconds, because your browser has to download Python before it can use it. Every run after that is instant.
+
+That is the whole assignment. When it works, click assignment 1 in the tabs along the top.
+
+While you are here, three things worth knowing about this screen:
+
+  1. The Instructions button in the top right opens this panel. It is closed to begin with so the code has more room.
+  2. The A buttons beside it make everything bigger or smaller. Use them.
+  3. Ctrl+Enter runs your code without reaching for the mouse.

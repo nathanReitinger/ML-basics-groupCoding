@@ -1,0 +1,18 @@
+1. Hardcoded
+Four inputs, four answers, done.
+
+A NAND gate takes two inputs, each either 0 or 1, and gives back one answer. The rule is "not both":
+
+    the output is 1, UNLESS both inputs are 1
+
+NAND is worth knowing. Every chip in every computer you have ever used is built out of these, and nothing else.
+
+There are only four possible inputs, so the laziest thing that could possibly work is to write all four answers down in a table and look them up. Two are filled in. Fill in the other two, and press Run.
+
+When all four pass, the program carries on by itself and puts the gate into a real circuit. Read what happens - that part is the point of the assignment.
+
+Have a think about:
+
+  1. Two inputs needed four rows. How many rows for three inputs? For eight? For thirty-two?
+  2. You have known the rule since the top of this page. Is the rule written anywhere in the program?
+  3. A real chip has millions of gates in it. Could any of this be done with tables?

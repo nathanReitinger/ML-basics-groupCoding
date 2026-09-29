@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Name your group — Python Lab{% endblock %}
+{% block body_class %}entry{% endblock %}
+
+{% block content %}
+<main class="entry-main">
+
+  <div class="entry-left">
+    <div class="tag">
+      <div class="tag-band">
+        <span class="tag-band-text">this group is called</span>
+        <span class="tag-pin" aria-hidden="true"></span>
+      </div>
+
+      <form class="tag-body" method="post" action="{{ url_for('join') }}" autocomplete="off">
+        <label class="visually-hidden" for="group_name">Group name</label>
+        <input
+          id="group_name"
+          name="group_name"
+          class="tag-input"
+          type="text"
+          maxlength="40"
+          placeholder="The Semicolons"
+          value="{{ current or '' }}"
+          spellcheck="false"
+          autofocus
+          required>
+        {% if error %}<p class="tag-error">{{ error }}</p>{% endif %}
+        <button class="tag-go" type="submit">Open the lab</button>
+      </form>
+    </div>
+
+    {% if names %}
+      <form class="rejoin" method="post" action="{{ url_for('join') }}">
+        <label class="rejoin-label" for="existing">Been here before? Pick your group back up.</label>
+        <div class="rejoin-row">
+          <select id="existing" name="existing" required>
+            <option value="" selected disabled>choose your group</option>
+            {% for name in names %}
+              <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-quiet" type="submit">Rejoin</button>
+        </div>
+        <p class="rejoin-note">
+          Every group in the room is in this list. Please only open your own.
+        </p>
+      </form>
+    {% endif %}
+  </div>
+
+  <aside class="entry-note">
+    <h1>Python Lab</h1>
+    <p>
+      Pick a name and you get a workspace. Write Python, press Run, read the
+      output in the terminal underneath, and poke around in the shell beside it.
+    </p>
+    <p>
+      Everyone who types the same name lands in the same workspace, so your
+      teammates can pick up where you left off. Your code saves as you type,
+      and your browser remembers the group next time.
+    </p>
+    <p class="entry-instructor">
+      <a class="btn btn-quiet" href="{{ url_for('instructor_login') }}">Instructor</a>
+    </p>
+  </aside>
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Remember the last group this browser used, so the dropdown opens on it.
+  (function () {
+    var picker = document.getElementById("existing");
+    if (!picker) return;
+    try {
+      var last = localStorage.getItem("lab.group");
+      if (!last) return;
+      for (var i = 0; i < picker.options.length; i++) {
+        if (picker.options[i].value === last) {
+          picker.selectedIndex = i;
+          return;
+        }
+      }
+    } catch (ignored) { /* private browsing, never mind */ }
+  })();
+</script>
+{% endblock %}

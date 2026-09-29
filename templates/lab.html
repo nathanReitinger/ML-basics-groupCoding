@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{{ group }} — Python Lab{% endblock %}
+{% block body_class %}lab{% endblock %}
+
+{% block vendor_css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+{% endblock %}
+
+{% block content %}
+<header class="bar">
+  <div class="bar-left">
+    <span class="chip">
+      <span class="chip-band">group</span>
+      <span class="chip-name">{{ group }}</span>
+    </span>
+    <span id="save-state" class="save-state" data-state="saved">saved</span>
+    <span class="here" id="here" hidden></span>
+  </div>
+
+  <div class="bar-right">
+    <span id="status" class="status">starting Python</span>
+    <span class="textsize" role="group" aria-label="Text size">
+      <button id="text-smaller" type="button" aria-label="Smaller text">A</button>
+      <span id="text-size" class="textsize-readout">100%</span>
+      <button id="text-bigger" type="button" aria-label="Bigger text">A</button>
+    </span>
+    {% if task %}
+      <button id="task-toggle" class="btn btn-quiet" type="button" aria-pressed="true">Hide instructions</button>
+    {% endif %}
+    <button id="shell-toggle" class="btn btn-quiet" type="button" aria-pressed="false">Shell</button>
+    <button id="run" class="btn btn-run btn-go" type="button" disabled>Run</button>
+    <form method="post" action="{{ url_for('leave') }}">
+      <button class="btn btn-quiet" type="submit">Switch group</button>
+    </form>
+  </div>
+</header>
+
+{% if tasks %}
+<nav class="tabs" aria-label="Assignments">
+  {% for t in tasks %}
+    <a class="tab {% if t['id'] == task_id %}is-current{% endif %}"
+       href="{{ url_for('lab_task', tid=t['id']) }}" data-tab="1"
+       {% if t['id'] == task_id %}aria-current="page"{% endif %}>
+      <span class="tab-n">{{ loop.index }}</span>
+      <span class="tab-t">{{ t['title'] | bare }}</span>
+    </a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+<div class="below" id="below">
+  {% if task %}
+    <section class="task" id="task">
+      <div class="task-head">
+        <span class="task-label">assignment</span>
+        <span class="task-title">{{ task['title'] | bare }}</span>
+      </div>
+      {% if blocks %}
+        {# the first block is the one-line subtitle from the .txt file #}
+        <p class="task-sub">{{ blocks[0].body }}</p>
+        <div class="task-body">
+          {% for b in blocks[1:] %}
+            {% if b.kind == 'code' %}<pre class="task-code">{{ b.body }}</pre>
+            {% elif b.kind == 'hint' %}<details class="hint"><summary>{{ b.title }}</summary><div class="hint-body">{% for sub in b.body %}{% if sub.kind == 'code' %}<pre class="task-code">{{ sub.body }}</pre>{% else %}<p>{{ sub.body }}</p>{% endif %}{% endfor %}</div></details>
+            {% elif b.kind == 'list' %}{% if b.ordered %}<ol class="task-list-items">{% for item in b.body %}<li>{{ item }}</li>{% endfor %}</ol>{% else %}<ul class="task-list-items">{% for item in b.body %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+            {% else %}<p>{{ b.body }}</p>{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if task['starter_code'].strip() %}
+        <div class="task-actions">
+          <button id="load-starter" class="btn btn-quiet" type="button">Start this one over</button>
+        </div>
+      {% endif %}
+    </section>
+
+    <div class="task-grip" id="task-grip" role="separator" aria-orientation="horizontal"
+         tabindex="0" aria-label="Resize the instructions"></div>
+  {% endif %}
+
+  <main class="workspace" id="workspace">
+    <div class="stack" id="stack">
+      <section class="pane pane-editor">
+        <textarea id="code">{{ code }}</textarea>
+      </section>
+
+      <div class="grip" id="grip" role="separator" aria-orientation="horizontal" tabindex="0"
+           aria-label="Resize the editor and output"></div>
+
+      <section class="pane pane-term">
+        <div class="pane-head">
+          <span class="pane-head-name">Output</span>
+          <span class="pane-actions">
+            <button id="copy-term" class="pane-btn" type="button">Copy</button>
+            <button id="clear" class="pane-btn" type="button">Clear</button>
+          </span>
+        </div>
+        <pre id="terminal" class="terminal" aria-live="polite" aria-label="Program output"></pre>
+      </section>
+    </div>
+
+    <div class="vgrip" id="vgrip" role="separator" aria-orientation="vertical" tabindex="0"
+         aria-label="Resize the shell"></div>
+
+    <aside class="pane pane-shell" id="shellpane">
+      <div class="pane-head">
+        <span class="pane-head-name">Shell</span>
+        <span class="pane-actions">
+          <button id="copy-shell" class="pane-btn" type="button">Copy</button>
+          <button id="shell-clear" class="pane-btn" type="button">Clear</button>
+        </span>
+      </div>
+      <pre id="shell-out" class="terminal" aria-live="polite" aria-label="Shell output"></pre>
+      <div class="shell-row">
+        <span class="shell-caret" aria-hidden="true">&gt;</span>
+        <label class="visually-hidden" for="shell-input">Shell command</label>
+        <input id="shell-input" class="shell-input" type="text" spellcheck="false"
+               autocomplete="off" placeholder="ls, pip install pandas, help">
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div class="solved" id="solved" hidden>
+  <p class="solved-text" id="solved-text">Nice work.</p>
+  {% if next_task %}
+    <a class="btn btn-go" href="{{ url_for('lab_task', tid=next_task['id']) }}">
+      Next: {{ next_task['title'] | bare }}
+    </a>
+  {% else %}
+    <span class="solved-text">That was the last one.</span>
+  {% endif %}
+  <button class="solved-close" id="solved-close" type="button" aria-label="Dismiss">&times;</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {% include "_editor_scripts.html" %}
+  <script>
+    window.LAB = {
+      group: {{ group | tojson }},
+      saveUrl: {{ url_for('api_save') | tojson }},
+      taskId: {{ task_id | tojson }},
+      starter: {{ (task['starter_code'] if task else '') | tojson }},
+      nextTitle: {{ (next_task['title'] if next_task else None) | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='lab.js') }}"></script>
+{% endblock %}

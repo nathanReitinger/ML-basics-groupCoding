@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Groups — Python Lab{% endblock %}
+{% block body_class %}entry{% endblock %}
+
+{% block content %}
+<main class="roster-page">
+
+  <header class="roster-head">
+    <div>
+      <h1>The room</h1>
+      <p class="roster-meta">
+        <span id="count">{{ group_count }} group{{ '' if group_count == 1 else 's' }}</span>
+        <span>{{ task_count }} task{{ '' if task_count == 1 else 's' }}</span>
+        <span id="pulse" class="pulse">updating live</span>
+      </p>
+    </div>
+    <div class="roster-actions">
+      <a class="btn btn-quiet" href="{{ url_for('tasks_index') }}">Tasks</a>
+      <form method="post" action="{{ url_for('instructor_logout') }}">
+        <button class="btn btn-quiet" type="submit">Sign out</button>
+      </form>
+    </div>
+  </header>
+
+  <p id="empty" class="empty" {% if group_count %}hidden{% endif %}>
+    No groups yet. Share the link and they'll appear here as students name themselves.
+  </p>
+
+  <div id="roster">
+    {% for section in sections %}
+      <section class="tasksection" data-task="{{ section.id or 'none' }}">
+        <div class="tasksection-head">
+          <h2 class="tasksection-title">{{ section.title }}</h2>
+          <span class="tasksection-count">
+            {{ section.groups|length }} group{{ '' if section.groups|length == 1 else 's' }}
+          </span>
+          {% if section.url %}
+            <a class="tasksection-edit" href="{{ section.url }}">Edit task</a>
+          {% endif %}
+        </div>
+
+        {% if not section.groups %}
+          <p class="tasksection-empty">Nobody on this one.</p>
+        {% else %}
+          <ul class="roster">
+            {% for g in section.groups %}
+              <li class="group-card" data-id="{{ g.id }}" data-updated="{{ g.updated_at }}">
+                <a class="group-open" href="{{ g.url }}">
+                  <span class="chip">
+                    <span class="chip-band">group</span>
+                    <span class="chip-name">{{ g.name }}</span>
+                  </span>
+                  <span class="group-facts">
+                    {%- if g.started -%}
+                      {{ g.lines }} line{{ '' if g.lines == 1 else 's' }}, edited {{ g.updated_human }}
+                    {%- else -%}
+                      hasn't started yet
+                    {%- endif -%}
+                  </span>
+                </a>
+                {% if g.progress %}
+                  <span class="dots" title="which assignments they have touched">
+                    {% for step in g.progress %}
+                      <a class="dot {% if step.started %}is-done{% endif %}{% if step.current %} is-here{% endif %}"
+                         href="{{ step.url }}" title="{{ step.title }}">{{ step.n }}</a>
+                    {% endfor %}
+                  </span>
+                {% endif %}
+                {% if g.preview %}<pre class="group-preview">{{ g.preview }}</pre>{% endif %}
+                <a class="btn btn-run group-run" href="{{ g.url }}">Open and run</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </div>
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    window.ROSTER = {
+      groupsUrl: {{ url_for('api_groups') | tojson }},
+      pollMs: {{ poll_ms | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='roster.js') }}"></script>
+{% endblock %}

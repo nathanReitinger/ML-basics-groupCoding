@@ -1,0 +1,33 @@
+3. ML
+Nobody chooses the numbers this time.
+
+This is a finished demo. Press Run and watch it.
+
+You have built two gates now by working the numbers out yourself. Here the numbers are not chosen by anyone - the network is shown some examples and works them out on its own.
+
+Scroll past the first block in the file. That is a stand-in for Keras, and there is nothing in it you need. The part that matters is under THE MODEL, and it is ordinary Keras code - the same lines you would write in a Colab notebook.
+
+Read those lines before you run it. Every one has a comment saying what it does:
+
+    Sequential()                         the type of model
+    Dense(16, input_dim=2, ...)          first layer, 16 neurons
+    Dense(1, activation='sigmoid')       second layer, one answer out
+    compile(loss=..., optimizer=...)     what 'wrong' means, and how to fix it
+    fit(training_data, target_data)      the actual guess-and-check
+    evaluate(...)                        how did it do
+
+Watch the loss fall and the accuracy climb as the epochs go by. The loss is how wrong it currently is, and all of training is one long argument with that number.
+
+THEN TRY XOR. The target_data line is an AND gate at the moment: 1 only when both inputs are 1. A single neuron can do AND, so you could have done this one by hand with assignment 2.
+
+There is a comment at the bottom of the file showing the one line to change to make it XOR instead - the output is 1 when the inputs are DIFFERENT. Before you run it, go back to assignment 2 and hunt for three numbers that do XOR. There are none. No bias and no pair of weights can ever do it.
+
+Then run this again. Same code, same 500 epochs, and it finds XOR anyway, because the middle layer of 16 gives it somewhere to work that a single neuron never had.
+
+Have a think about:
+
+  1. In assignment 2 you chose three numbers and could say what each one was for. This has 65. What is the 5th one for?
+  2. You never told the model the rule for either gate. What did you give it instead?
+  3. Nothing about the code changed between AND and XOR - only the answers in target_data. So what is it that a bigger network actually buys you?
+
+A note on Keras. Keras needs TensorFlow underneath, and TensorFlow has no WebAssembly build, so neither can run inside a browser tab. The block at the top of the file gives the same names and does the same arithmetic in numpy: Dense layers, mean squared error, the adam optimiser, relu and sigmoid. The code you read and edit is real Keras, and it will run unchanged in Colab.

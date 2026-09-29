@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Tasks — Python Lab{% endblock %}
+{% block body_class %}entry{% endblock %}
+
+{% block content %}
+<main class="task-page">
+  <h1>Tasks</h1>
+  <p class="crumbs">
+    <a href="{{ url_for('instructor_roster') }}">Groups</a>
+    <span>{{ group_count }} group{{ '' if group_count == 1 else 's' }} in the room</span>
+  </p>
+
+  <p class="field-hint">
+    A task is the assignment plus the code students start from. Write the
+    starter half-finished and they fill in the rest.
+  </p>
+
+  <div class="form-actions" style="margin-bottom: 26px;">
+    <a class="btn btn-run" href="{{ url_for('task_new') }}" style="text-decoration:none">Write a task</a>
+    {% if tasks %}
+      <form method="post" action="{{ url_for('task_unassign') }}">
+        <button class="btn btn-quiet" type="submit">Clear the assignment from every group</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if not tasks %}
+    <p class="empty">
+      Nothing written yet. A task gives every group the same instructions and the
+      same starting code, so nobody spends the first ten minutes typing boilerplate.
+    </p>
+  {% else %}
+    <ul class="task-list">
+      {% for t in tasks %}
+        <li class="task-row">
+          <a href="{{ url_for('task_edit', tid=t['id']) }}">
+            <span class="task-row-name">{{ t['title'] }}</span><br>
+            <span class="task-row-meta">
+              {% if t['groups'] %}
+                on {{ t['groups'] }} group{{ '' if t['groups'] == 1 else 's' }}
+              {% else %}
+                not handed out
+              {% endif %}
+              · edited {{ t['updated_at'] | when }}
+            </span>
+          </a>
+          <a class="btn btn-quiet" href="{{ url_for('task_edit', tid=t['id']) }}"
+             style="text-decoration:none">Open</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</main>
+{% endblock %}

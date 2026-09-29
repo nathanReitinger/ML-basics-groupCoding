@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Instructor — Python Lab{% endblock %}
+{% block body_class %}entry{% endblock %}
+
+{% block content %}
+<main class="gate-main">
+  <form class="gate" method="post" action="{{ url_for('instructor_login_post') }}" autocomplete="off">
+    <h1>Instructor</h1>
+    <p>Students don't need this. It opens the roster, the tasks, and every group's code.</p>
+
+    <label class="visually-hidden" for="password">Instructor password</label>
+    <input id="password" name="password" class="gate-input" type="password"
+           placeholder="password" autofocus required>
+    <input type="hidden" name="next" value="{{ next }}">
+
+    {% if error %}<p class="gate-error">{{ error }}</p>{% endif %}
+
+    <button class="tag-go" type="submit">Sign in</button>
+    <p class="gate-foot">
+      Your browser remembers this, so the password stays off the screen when
+      you're projecting. Change it at the top of <code>app.py</code>.
+    </p>
+    <p class="gate-foot"><a href="{{ url_for('home') }}">Back to the student page</a></p>
+  </form>
+</main>
+{% endblock %}

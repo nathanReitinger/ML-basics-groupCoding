@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}{{ group['name'] }} — instructor view{% endblock %}
+{% block body_class %}lab demo{% endblock %}
+
+{% block vendor_css %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+{% endblock %}
+
+{% block content %}
+<header class="bar">
+  <div class="bar-left">
+    <a class="btn btn-quiet" href="{{ url_for('instructor_roster') }}">All groups</a>
+
+    <span class="stepper">
+      {% if prev_row %}
+        <a class="btn btn-step" href="{{ url_for('instructor_demo', gid=prev_row['id']) }}"
+           title="{{ prev_row['name'] }} — left arrow, or Alt+left while typing">
+          &#8592; Previous
+        </a>
+      {% endif %}
+
+      <span class="chip">
+        <span class="chip-band">group</span>
+        <span class="chip-name">{{ group['name'] }}</span>
+      </span>
+
+      {% if next_row %}
+        <a class="btn btn-step" href="{{ url_for('instructor_demo', gid=next_row['id']) }}"
+           title="{{ next_row['name'] }} — right arrow, or Alt+right while typing">
+          Next &#8594;
+        </a>
+      {% endif %}
+    </span>
+
+    {% if total > 1 %}
+      <label class="visually-hidden" for="jump">Jump to a group</label>
+      <select id="jump" class="jump">
+        {% for task, members in sections %}
+          {% if members %}
+            <optgroup label="{{ task['title'] if task else 'No task assigned' }}">
+              {% for g in members %}
+                <option value="{{ url_for('instructor_demo', gid=g['id']) }}"
+                        {% if g['id'] == group['id'] %}selected{% endif %}>{{ g['name'] }}</option>
+              {% endfor %}
+            </optgroup>
+          {% endif %}
+        {% endfor %}
+      </select>
+      <span class="counter">{{ position + 1 }} of {{ total }}</span>
+    {% endif %}
+  </div>
+
+  <div class="bar-right">
+    <span id="status" class="status">starting Python</span>
+    <span class="textsize" role="group" aria-label="Text size">
+      <button id="text-smaller" type="button" aria-label="Smaller text">A</button>
+      <span id="text-size" class="textsize-readout">100%</span>
+      <button id="text-bigger" type="button" aria-label="Bigger text">A</button>
+    </span>
+    {% if task %}
+      <button id="task-toggle" class="btn btn-quiet" type="button" aria-pressed="true">Hide instructions</button>
+    {% endif %}
+    <button id="shell-toggle" class="btn btn-quiet" type="button" aria-pressed="false">Shell</button>
+    <button id="run" class="btn btn-run btn-go" type="button" disabled>Run</button>
+  </div>
+</header>
+
+<div class="subbar">
+  <form class="taskpick" method="post" action="{{ url_for('group_set_task', gid=group['id']) }}">
+    <label for="task_id">Task</label>
+    <select id="task_id" name="task_id" onchange="this.form.submit()">
+      <option value="" {% if not task %}selected{% endif %}>no task</option>
+      {% for t in tasks %}
+        <option value="{{ t['id'] }}" {% if task and t['id'] == task['id'] %}selected{% endif %}>
+          {{ t['title'] }}
+        </option>
+      {% endfor %}
+    </select>
+    <noscript><button class="btn btn-quiet" type="submit">Move</button></noscript>
+  </form>
+
+  <span class="subbar-note">
+    Their code, running here. Edits stay on this screen unless you save them back.
+  </span>
+  <span id="edited" class="subbar-edited"></span>
+  <button id="stale" class="subbar-stale" type="button" hidden>
+    They've edited since you opened this. Load their latest
+  </button>
+  <button id="pull" class="btn btn-quiet" type="button">Reload their code</button>
+  <button id="push" class="btn btn-quiet" type="button">Save to group</button>
+</div>
+
+{% if tasks %}
+<nav class="tabs tabs-demo" aria-label="Their assignments">
+  {% for t in tasks %}
+    <a class="tab {% if t['id'] == task_id %}is-current{% endif %}"
+       href="{{ url_for('instructor_demo_task', gid=group['id'], tid=t['id']) }}">
+      <span class="tab-n">{{ loop.index }}</span>
+      <span class="tab-t">{{ t['title'] | bare }}</span>
+    </a>
+  {% endfor %}
+  {% if not viewing_their_page %}
+    <span class="tab-note">they have another one open</span>
+  {% endif %}
+</nav>
+{% endif %}
+
+<div class="below" id="below">
+  {% if task %}
+    <section class="task" id="task">
+      <div class="task-head">
+        <span class="task-label">assignment</span>
+        <span class="task-title">{{ task['title'] }}</span>
+      </div>
+      {% if blocks %}
+        {# the first block is the one-line subtitle from the .txt file #}
+        <p class="task-sub">{{ blocks[0].body }}</p>
+        <div class="task-body">
+          {% for b in blocks[1:] %}
+            {% if b.kind == 'code' %}<pre class="task-code">{{ b.body }}</pre>
+            {% elif b.kind == 'hint' %}<details class="hint"><summary>{{ b.title }}</summary><div class="hint-body">{% for sub in b.body %}{% if sub.kind == 'code' %}<pre class="task-code">{{ sub.body }}</pre>{% else %}<p>{{ sub.body }}</p>{% endif %}{% endfor %}</div></details>
+            {% elif b.kind == 'list' %}{% if b.ordered %}<ol class="task-list-items">{% for item in b.body %}<li>{{ item }}</li>{% endfor %}</ol>{% else %}<ul class="task-list-items">{% for item in b.body %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+            {% else %}<p>{{ b.body }}</p>{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div class="task-actions">
+        <a class="btn btn-quiet" href="{{ url_for('task_edit', tid=task['id']) }}">Edit this assignment</a>
+      </div>
+    </section>
+
+    <div class="task-grip" id="task-grip" role="separator" aria-orientation="horizontal"
+         tabindex="0" aria-label="Resize the instructions"></div>
+  {% endif %}
+
+  <main class="workspace" id="workspace">
+  <div class="stack" id="stack">
+    <section class="pane pane-editor">
+      <textarea id="code">{{ code }}</textarea>
+    </section>
+
+    <div class="grip" id="grip" role="separator" aria-orientation="horizontal" tabindex="0"
+         aria-label="Resize the editor and output"></div>
+
+    <section class="pane pane-term">
+      <div class="pane-head">
+        <span class="pane-head-name">Output</span>
+        <span class="pane-actions">
+          <button id="copy-term" class="pane-btn" type="button">Copy</button>
+          <button id="clear" class="pane-btn" type="button">Clear</button>
+        </span>
+      </div>
+      <pre id="terminal" class="terminal" aria-live="polite" aria-label="Program output"></pre>
+    </section>
+  </div>
+
+  <div class="vgrip" id="vgrip" role="separator" aria-orientation="vertical" tabindex="0"
+       aria-label="Resize the shell"></div>
+
+  <aside class="pane pane-shell" id="shellpane">
+    <div class="pane-head">
+      <span class="pane-head-name">Shell</span>
+      <span class="pane-actions">
+        <button id="copy-shell" class="pane-btn" type="button">Copy</button>
+        <button id="shell-clear" class="pane-btn" type="button">Clear</button>
+      </span>
+    </div>
+    <pre id="shell-out" class="terminal" aria-live="polite" aria-label="Shell output"></pre>
+    <div class="shell-row">
+      <span class="shell-caret" aria-hidden="true">&gt;</span>
+      <label class="visually-hidden" for="shell-input">Shell command</label>
+      <input id="shell-input" class="shell-input" type="text" spellcheck="false"
+             autocomplete="off" placeholder="ls, pip install pandas, help">
+    </div>
+  </aside>
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {% include "_editor_scripts.html" %}
+  <script>
+    window.DEMO = {
+      groupName: {{ group['name'] | tojson }},
+      groupUrl: {{ url_for('api_group', gid=group['id'], tid=task_id) | tojson }},
+      groupId: {{ group['id'] | tojson }},
+      taskId: {{ task_id | tojson }},
+      updatedAt: {{ group['updated_at'] | tojson }},
+      prevUrl: {{ prev_url | tojson }},
+      nextUrl: {{ next_url | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='demo.js') }}"></script>
+{% endblock %}

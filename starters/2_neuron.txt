@@ -1,0 +1,37 @@
+2. Variables
+Three numbers and one line, instead of a table.
+
+Same NAND gate: the output is 1 unless both inputs are 1.
+
+At the top of the file there is a worked example for a DIFFERENT gate, so you can see the shape of the thing. It is an AND gate, it is finished and correct, and it is not the gate you have to build. Read it, then write the same thing for NAND.
+
+The activation function is done for you, because it is the same for every gate. You write the three numbers and the line that adds them up.
+
+Press Run before you change anything and look at what your gate currently answers. Then keep running it - the checker tells you which of the four rows are wrong, and tries to work out from your answers what has gone astray.
+
+HINT: The line that adds things up
+Look at the AND example. The line you need has exactly the same shape:
+    answer = bias + (input_x * weight_1) + (input_y * weight_2)
+Copy that shape across first and get it running, even with the numbers still at 0. Then worry about what the numbers should be. If your gate gives the same answer for all four inputs, this line is what is missing.
+
+HINT: Start with the easiest row
+When both inputs are 0, the two "input times weight" pieces are both 0, and they disappear. The only thing left in the sum is the bias, on its own. NAND says that row must output 1, and the activation outputs 1 when the sum is 0 or more. So the bias has to be 0 or more. That is one of your three numbers narrowed down before you have guessed anything.
+
+HINT: Why copying the AND numbers cannot work
+Suppose you keep the example's positive weights. From the row above, the bias has to be 0 or more. Now look at the last row: both inputs 1 must output 0, so bias + weight_1 + weight_2 has to come out BELOW zero. If the bias is already 0 or more and you add two more positive numbers to it, the total only goes up. It can never get below zero. So at least one weight has to be negative, and it is tidiest to make both of them negative.
+
+HINT: What a negative weight actually means
+Every weight in the AND example pushed the answer up - switch an input on and the sum rises. A negative weight does the opposite: switching that input on pushes the sum DOWN. For NAND the bias holds the output up at 1 to begin with, and the two inputs push down against it. Switch enough of them on and they win, and the output drops to 0. That is exactly what "not both" means, written as arithmetic.
+
+HINT: Pinning the last number down
+With both weights at -1, three conditions have to hold at the same time:
+    x=0 y=0 gives 1   ->   bias                        must be 0 or more
+    x=1 y=0 gives 1   ->   bias + weight_1             must be 0 or more
+    x=1 y=1 gives 0   ->   bias + weight_1 + weight_2  must be BELOW 0
+The middle one says the bias is at least 1. The last one says it is less than 2. Anything in that range passes the checker - but read what the program says at the end about which part of the range to pick, because it matters more than you would think.
+
+Have a think about:
+
+  1. A weight is what one input is worth. What is the bias?
+  2. Flip your three numbers to the opposite sign. Which gate did you just build?
+  3. The table in assignment 1 broke on a voltage reading of 0.98. Why does this version cope?
